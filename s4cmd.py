@@ -27,9 +27,9 @@ import logging, traceback, types, threading, random, socket
 IS_PYTHON2 = sys.version_info[0] == 2
 
 if IS_PYTHON2:
-  from cStringIO import StringIO
-  import Queue
-  import ConfigParser
+  from io import StringIO
+  import queue
+  import configparser
 else:
   from io import StringIO
   import queue as Queue
@@ -264,14 +264,14 @@ class S3URL:
     '''Check if given uri is a valid S3 URL'''
     return S3URL.S3URL_PATTERN.match(uri) != None
 
-class TaskQueue(Queue.Queue):
+class TaskQueue(queue.Queue):
   '''Wrapper class to Queue.
      Since we need to ensure that main thread is not blocked by child threads
      and cannot be wake up by Ctrl-C interrupt, we have to override join()
      method.
   '''
   def __init__(self):
-    Queue.Queue.__init__(self)
+    queue.Queue.__init__(self)
     self.exc_info = None
 
   def join(self):
@@ -298,7 +298,7 @@ class TaskQueue(Queue.Queue):
     try:
       while self.get_nowait():
         self.task_done()
-    except Queue.Empty:
+    except queue.Empty:
       pass
 
 class ThreadPool(object):
@@ -462,7 +462,7 @@ class S3Handler(object):
         s3cfg_path = "%s/.s3cfg" % os.environ["HOME"]
       if not os.path.exists(s3cfg_path):
         return None
-      config = ConfigParser.ConfigParser()
+      config = configparser.ConfigParser()
       config.read(s3cfg_path)
       keys = config.get("default", "access_key"), config.get("default", "secret_key")
       debug("read S3 keys from $HOME/.s3cfg file")
